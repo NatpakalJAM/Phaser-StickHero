@@ -16,7 +16,7 @@ const IDLE = 0;
 const WAITING = 1;
 const GROWING = 2;
 const WALKING = 3;
-window.onload = function() {
+window.onload = function () {
     let gameConfig = {
         type: Phaser.AUTO,
         width: 750,
@@ -29,16 +29,16 @@ window.onload = function() {
     resize();
     window.addEventListener("resize", resize, false);
 }
-class playGame extends Phaser.Scene{
-    constructor(){
+class playGame extends Phaser.Scene {
+    constructor() {
         super("PlayGame");
     }
-    preload(){
-        this.load.image("tile", "tile.png");
-        this.load.image("coin", "coin.png");
-        this.load.image("player", "player.png");
+    preload() {
+        this.load.image("tile", "assets/img/tile.png");
+        this.load.image("coin", "assets/img/coin.png");
+        this.load.image("player", "assets/img/player.png");
     }
-    create(){
+    create() {
         this.addCoin();
         this.addPlatforms();
         this.addPlayer();
@@ -48,14 +48,14 @@ class playGame extends Phaser.Scene{
         this.input.keyboard.on("keydown", this.grow, this);
         this.input.keyboard.on("keyup", this.stop, this);
     }
-    addPlatforms(){
+    addPlatforms() {
         this.mainPlatform = 0;
         this.platforms = [];
         this.platforms.push(this.addPlatform(0));
         this.platforms.push(this.addPlatform(game.config.width));
         this.tweenPlatform();
     }
-    addPlatform(posX){
+    addPlatform(posX) {
         let platform = this.add.sprite(posX, game.config.height - gameOptions.platformHeight, "tile");
         platform.displayWidth = (gameOptions.platformWidthRange[0] + gameOptions.platformWidthRange[1]) / 2;
         platform.displayHeight = gameOptions.platformHeight;
@@ -63,15 +63,15 @@ class playGame extends Phaser.Scene{
         platform.setOrigin(0, 0);
         return platform
     }
-    addCoin(){
+    addCoin() {
         this.coin = this.add.sprite(0, game.config.height - gameOptions.platformHeight + gameOptions.playerHeight / 2, "coin");
         this.coin.visible = false;
     }
-    placeCoin(){
-        this.coin.x = Phaser.Math.Between(this.platforms[this.mainPlatform].getBounds().right + 10, this.platforms[1 - this.mainPlatform ].getBounds().left - 10);
+    placeCoin() {
+        this.coin.x = Phaser.Math.Between(this.platforms[this.mainPlatform].getBounds().right + 10, this.platforms[1 - this.mainPlatform].getBounds().left - 10);
         this.coin.visible = true;
     }
-    tweenPlatform(){
+    tweenPlatform() {
         let destination = this.platforms[this.mainPlatform].displayWidth + Phaser.Math.Between(gameOptions.platformGapRange[0], gameOptions.platformGapRange[1]);
         let size = Phaser.Math.Between(gameOptions.platformWidthRange[0], gameOptions.platformWidthRange[1]);
         this.tweens.add({
@@ -80,24 +80,24 @@ class playGame extends Phaser.Scene{
             displayWidth: size,
             duration: gameOptions.scrollTime,
             callbackScope: this,
-            onComplete: function(){
+            onComplete: function () {
                 this.gameMode = WAITING;
                 this.placeCoin();
             }
         })
     }
-    addPlayer(){
+    addPlayer() {
         this.player = this.add.sprite(this.platforms[this.mainPlatform].displayWidth - gameOptions.poleWidth, game.config.height - gameOptions.platformHeight, "player");
         this.player.setOrigin(1, 1)
     }
-    addPole(){
+    addPole() {
         this.pole = this.add.sprite(this.platforms[this.mainPlatform].displayWidth, game.config.height - gameOptions.platformHeight, "tile");
         this.pole.setOrigin(1, 1);
         this.pole.displayWidth = gameOptions.poleWidth;
         this.pole.displayHeight = gameOptions.playerHeight / 4;
     }
-    grow(){
-        if(this.gameMode == WAITING){
+    grow() {
+        if (this.gameMode == WAITING) {
             this.gameMode = GROWING;
             this.growTween = this.tweens.add({
                 targets: [this.pole],
@@ -105,97 +105,94 @@ class playGame extends Phaser.Scene{
                 duration: gameOptions.growTime
             });
         }
-        if(this.gameMode == WALKING){
-            if(this.player.flipY){
+        if (this.gameMode == WALKING) {
+            if (this.player.flipY) {
                 this.player.flipY = false;
                 this.player.y = game.config.height - gameOptions.platformHeight;
-            }
-            else{
+            } else {
                 this.player.flipY = true;
                 this.player.y = game.config.height - gameOptions.platformHeight + gameOptions.playerHeight - gameOptions.poleWidth;
                 let playerBound = this.player.getBounds();
                 let platformBound = this.platforms[1 - this.mainPlatform].getBounds();
-                if(Phaser.Geom.Rectangle.Intersection(playerBound, platformBound).width != 0){
+                if (Phaser.Geom.Rectangle.Intersection(playerBound, platformBound).width != 0) {
                     this.player.flipY = false;
                     this.player.y = game.config.height - gameOptions.platformHeight;
                 }
             }
         }
     }
-    stop(){
-        if(this.gameMode == GROWING){
+    stop() {
+        if (this.gameMode == GROWING) {
             this.gameMode = IDLE;
             this.growTween.stop();
-            if(this.pole.displayHeight > this.platforms[1 - this.mainPlatform].x - this.pole.x){
+            if (this.pole.displayHeight > this.platforms[1 - this.mainPlatform].x - this.pole.x) {
                 this.tweens.add({
                     targets: [this.pole],
                     angle: 90,
                     duration: gameOptions.rotateTime,
                     ease: "Bounce.easeOut",
                     callbackScope: this,
-                    onComplete: function(){
+                    onComplete: function () {
                         this.gameMode = WALKING;
-                        if(this.pole.displayHeight < this.platforms[1 - this.mainPlatform].x + this.platforms[1 - this.mainPlatform].displayWidth - this.pole.x){
+                        if (this.pole.displayHeight < this.platforms[1 - this.mainPlatform].x + this.platforms[1 - this.mainPlatform].displayWidth - this.pole.x) {
                             this.walkTween = this.tweens.add({
                                 targets: [this.player],
                                 x: this.platforms[1 - this.mainPlatform].x + this.platforms[1 - this.mainPlatform].displayWidth - this.pole.displayWidth,
                                 duration: gameOptions.walkTime * this.pole.displayHeight,
                                 callbackScope: this,
-                                onComplete: function(){
+                                onComplete: function () {
                                     this.coin.visible = false;
                                     this.tweens.add({
                                         targets: [this.player, this.pole, this.platforms[1 - this.mainPlatform], this.platforms[this.mainPlatform]],
                                         props: {
                                             x: {
-                                                value: "-= " +  this.platforms[1 - this.mainPlatform].x
+                                                value: "-= " + this.platforms[1 - this.mainPlatform].x
                                             }
                                         },
                                         duration: gameOptions.scrollTime,
                                         callbackScope: this,
-                                        onComplete: function(){
+                                        onComplete: function () {
                                             this.prepareNextMove();
                                         }
                                     })
                                 }
                             })
-                        }
-                        else{
+                        } else {
                             this.platformTooLong();
                         }
                     }
                 })
-            }
-            else{
+            } else {
                 this.platformTooShort();
             }
         }
     }
-    platformTooLong(){
+    platformTooLong() {
         this.walkTween = this.tweens.add({
             targets: [this.player],
             x: this.pole.x + this.pole.displayHeight + this.player.displayWidth,
             duration: gameOptions.walkTime * this.pole.displayHeight,
             callbackScope: this,
-            onComplete: function(){
+            onComplete: function () {
                 this.fallAndDie();
             }
         })
     }
-    platformTooShort(){
+    platformTooShort() {
         this.tweens.add({
             targets: [this.pole],
             angle: 90,
             duration: gameOptions.rotateTime,
             ease: "Cubic.easeIn",
             callbackScope: this,
-            onComplete: function(){
+            onComplete: function () {
                 this.gameMode = WALKING;
                 this.tweens.add({
                     targets: [this.player],
                     x: this.pole.x + this.pole.displayHeight,
                     duration: gameOptions.walkTime * this.pole.displayHeight,
                     callbackScope: this,
-                    onComplete: function(){
+                    onComplete: function () {
                         this.tweens.add({
                             targets: [this.pole],
                             angle: 180,
@@ -208,7 +205,7 @@ class playGame extends Phaser.Scene{
             }
         })
     }
-    fallAndDie(){
+    fallAndDie() {
         this.gameMode = IDLE;
         this.tweens.add({
             targets: [this.player],
@@ -216,12 +213,12 @@ class playGame extends Phaser.Scene{
             duration: gameOptions.fallTime,
             ease: "Cubic.easeIn",
             callbackScope: this,
-            onComplete: function(){
+            onComplete: function () {
                 this.shakeAndRestart();
             }
         })
     }
-    prepareNextMove(){
+    prepareNextMove() {
         this.gameMode = IDLE;
         this.platforms[this.mainPlatform].x = game.config.width;
         this.mainPlatform = 1 - this.mainPlatform;
@@ -230,43 +227,43 @@ class playGame extends Phaser.Scene{
         this.pole.x = this.platforms[this.mainPlatform].displayWidth;
         this.pole.displayHeight = gameOptions.poleWidth;
     }
-    shakeAndRestart(){
+    shakeAndRestart() {
         this.cameras.main.shake(800, 0.01);
         this.time.addEvent({
             delay: 2000,
             callbackScope: this,
-            callback: function(){
+            callback: function () {
                 this.scene.start("PlayGame");
             }
         })
     }
-    update(){
-        if(this.player.flipY){
+    update() {
+        if (this.player.flipY) {
             let playerBound = this.player.getBounds();
             let coinBound = this.coin.getBounds();
             let platformBound = this.platforms[1 - this.mainPlatform].getBounds();
-            if(Phaser.Geom.Rectangle.Intersection(playerBound, platformBound).width != 0){
+            if (Phaser.Geom.Rectangle.Intersection(playerBound, platformBound).width != 0) {
                 this.walkTween.stop();
                 this.gameMode = IDLE;
                 this.shakeAndRestart();
             }
-            if(this.coin.visible && Phaser.Geom.Rectangle.Intersection(playerBound, coinBound).width != 0){
+            if (this.coin.visible && Phaser.Geom.Rectangle.Intersection(playerBound, coinBound).width != 0) {
                 this.coin.visible = false;
             }
         }
     }
 };
-function resize(){
+
+function resize() {
     let canvas = document.querySelector("canvas");
     let windowWidth = window.innerWidth;
     let windowHeight = window.innerHeight;
     let windowRatio = windowWidth / windowHeight;
     let gameRatio = game.config.width / game.config.height;
-    if(windowRatio < gameRatio){
+    if (windowRatio < gameRatio) {
         canvas.style.width = windowWidth + "px";
         canvas.style.height = (windowWidth / gameRatio) + "px";
-    }
-    else{
+    } else {
         canvas.style.width = (windowHeight * gameRatio) + "px";
         canvas.style.height = windowHeight + "px";
     }
