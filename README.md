@@ -6,6 +6,9 @@ StickHero clone with [Phaser](https://github.com/photonstorm/phaser) v3.16.2
 
 Hold or click left mouse / any button on keyboard
 
-## Example
+## Try on CodePen
 
+[Try on CodePen](https://codepen.io/Casnova_JAM/pen/KEGEgj)
+
+## ScreenShot
 <img src="assets/img/example.png" alt="Game Example" style="height: 200px; margin: auto;">
