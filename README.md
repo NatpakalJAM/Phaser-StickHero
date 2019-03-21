@@ -2,6 +2,10 @@
 
 StickHero clone with [Phaser](https://github.com/photonstorm/phaser) v3.16.2
 
-### Example
+## How to play
 
-<img src="assets/img/example.png" alt="Game Example" style="height: 300px; margin: auto;">
+Hold or click left mouse / any button on keyboard
+
+## Example
+
+<img src="assets/img/example.png" alt="Game Example" style="height: 200px; margin: auto;">
