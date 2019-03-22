@@ -16,6 +16,12 @@ const IDLE = 0;
 const WAITING = 1;
 const GROWING = 2;
 const WALKING = 3;
+let scoreCount = 0;
+let coinCount = 0;
+let highScoreCount = 0;
+let highCoinCount = 0;
+let scoreText;
+let highScoreText;
 window.onload = function () {
     let gameConfig = {
         type: Phaser.AUTO,
@@ -29,25 +35,53 @@ window.onload = function () {
     resize();
     window.addEventListener("resize", resize, false);
 }
+
 class playGame extends Phaser.Scene {
     constructor() {
         super("PlayGame");
     }
+
     preload() {
         this.load.image("tile", "assets/img/tile.png");
         this.load.image("coin", "assets/img/coin.png");
         this.load.image("player", "assets/img/player.png");
     }
+
     create() {
+        this.addScoreText()
         this.addCoin();
         this.addPlatforms();
         this.addPlayer();
         this.addPole();
         this.input.on("pointerdown", this.grow, this);
         this.input.on("pointerup", this.stop, this);
-        this.input.keyboard.on("keydown", this.grow, this);
-        this.input.keyboard.on("keyup", this.stop, this);
+        this.input.keyboard.on("keydown_SPACE", this.grow, this);
+        this.input.keyboard.on("keyup_SPACE", this.stop, this);
+        this.input.keyboard.on("keydown_ESC", this.restartGame, this);
     }
+
+    addScoreText() {
+        scoreCount = 0;
+        coinCount = 0;
+        scoreText = this.add.text(16, 16, "score: " + scoreCount + " /coin: " + coinCount, {
+            fontSize: '60px',
+            fill: '#000'
+        });
+        highScoreText = this.add.text(16, 85, "High score: " + highScoreCount + " /coin: " + highCoinCount, {
+            fontSize: '30px',
+            fill: '#04293C'
+        });
+    }
+
+    updateScoreText() {
+        if (scoreCount > highScoreCount)
+            highScoreCount = scoreCount
+        if (coinCount > highCoinCount)
+            highCoinCount = coinCount
+        highScoreText.setText("High score: " + highScoreCount + " /coin: " + highCoinCount);
+        scoreText.setText("score: " + scoreCount + " /coin: " + coinCount);
+    }
+
     addPlatforms() {
         this.mainPlatform = 0;
         this.platforms = [];
@@ -55,6 +89,7 @@ class playGame extends Phaser.Scene {
         this.platforms.push(this.addPlatform(game.config.width));
         this.tweenPlatform();
     }
+
     addPlatform(posX) {
         let platform = this.add.sprite(posX, game.config.height - gameOptions.platformHeight, "tile");
         platform.displayWidth = (gameOptions.platformWidthRange[0] + gameOptions.platformWidthRange[1]) / 2;
@@ -63,14 +98,17 @@ class playGame extends Phaser.Scene {
         platform.setOrigin(0, 0);
         return platform
     }
+
     addCoin() {
         this.coin = this.add.sprite(0, game.config.height - gameOptions.platformHeight + gameOptions.playerHeight / 2, "coin");
         this.coin.visible = false;
     }
+
     placeCoin() {
         this.coin.x = Phaser.Math.Between(this.platforms[this.mainPlatform].getBounds().right + 10, this.platforms[1 - this.mainPlatform].getBounds().left - 10);
         this.coin.visible = true;
     }
+
     tweenPlatform() {
         let destination = this.platforms[this.mainPlatform].displayWidth + Phaser.Math.Between(gameOptions.platformGapRange[0], gameOptions.platformGapRange[1]);
         let size = Phaser.Math.Between(gameOptions.platformWidthRange[0], gameOptions.platformWidthRange[1]);
@@ -86,16 +124,19 @@ class playGame extends Phaser.Scene {
             }
         })
     }
+
     addPlayer() {
         this.player = this.add.sprite(this.platforms[this.mainPlatform].displayWidth - gameOptions.poleWidth, game.config.height - gameOptions.platformHeight, "player");
         this.player.setOrigin(1, 1)
     }
+
     addPole() {
         this.pole = this.add.sprite(this.platforms[this.mainPlatform].displayWidth, game.config.height - gameOptions.platformHeight, "tile");
         this.pole.setOrigin(1, 1);
         this.pole.displayWidth = gameOptions.poleWidth;
         this.pole.displayHeight = gameOptions.playerHeight / 4;
     }
+
     grow() {
         if (this.gameMode == WAITING) {
             this.gameMode = GROWING;
@@ -121,6 +162,7 @@ class playGame extends Phaser.Scene {
             }
         }
     }
+
     stop() {
         if (this.gameMode == GROWING) {
             this.gameMode = IDLE;
@@ -167,6 +209,7 @@ class playGame extends Phaser.Scene {
             }
         }
     }
+
     platformTooLong() {
         this.walkTween = this.tweens.add({
             targets: [this.player],
@@ -178,6 +221,7 @@ class playGame extends Phaser.Scene {
             }
         })
     }
+
     platformTooShort() {
         this.tweens.add({
             targets: [this.pole],
@@ -205,6 +249,7 @@ class playGame extends Phaser.Scene {
             }
         })
     }
+
     fallAndDie() {
         this.gameMode = IDLE;
         this.tweens.add({
@@ -218,15 +263,20 @@ class playGame extends Phaser.Scene {
             }
         })
     }
+
     prepareNextMove() {
         this.gameMode = IDLE;
         this.platforms[this.mainPlatform].x = game.config.width;
         this.mainPlatform = 1 - this.mainPlatform;
         this.tweenPlatform();
+        scoreCount++;
+        this.updateScoreText();
+        scoreText.setText("score: " + scoreCount + " / coin: " + coinCount);
         this.pole.angle = 0;
         this.pole.x = this.platforms[this.mainPlatform].displayWidth;
         this.pole.displayHeight = gameOptions.poleWidth;
     }
+
     shakeAndRestart() {
         this.cameras.main.shake(800, 0.01);
         this.time.addEvent({
@@ -237,6 +287,11 @@ class playGame extends Phaser.Scene {
             }
         })
     }
+
+    restartGame() {
+        this.scene.start("PlayGame");
+    }
+
     update() {
         if (this.player.flipY) {
             let playerBound = this.player.getBounds();
@@ -249,6 +304,8 @@ class playGame extends Phaser.Scene {
             }
             if (this.coin.visible && Phaser.Geom.Rectangle.Intersection(playerBound, coinBound).width != 0) {
                 this.coin.visible = false;
+                coinCount++;
+                this.updateScoreText()
             }
         }
     }
