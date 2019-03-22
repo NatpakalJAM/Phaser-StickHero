@@ -68,7 +68,7 @@ class playGame extends Phaser.Scene {
             fill: '#000'
         });
         highScoreText = this.add.text(16, 85, "High score: " + highScoreCount + " /coin: " + highCoinCount, {
-            fontSize: '30px',
+            fontSize: '35px',
             fill: '#04293C'
         });
     }
